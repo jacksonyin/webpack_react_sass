@@ -50,6 +50,9 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    extensions: ['.js', '.jsx', '.scss', 'css']
+  },
   plugins: [
     new HtmlWebPackPlugin({
       filename: "./index.html",
