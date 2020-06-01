@@ -6,8 +6,8 @@
   "author": "Yin Xu",
   "license": "MIT",
   "scripts": {
-    "dev": "webpack-dev-server --mode=development",
-    "dev:e": "webpack-dev-server --config=./webpack.config.dev.js",
+    "dev": "webpack-dev-server --mode=development --config=./webpack.config.dev.js",
+    "dev:e": "webpack-dev-server --config=./webpack.config.dev.electron.js",
     "build": "webpack --mode=production"
   },
   "devDependencies": {
