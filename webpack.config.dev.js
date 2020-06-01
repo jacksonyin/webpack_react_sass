@@ -60,7 +60,7 @@ module.exports = {
     })
   ],
   target: 'electron-renderer',
-  devtool: 'eval-cheap-module-source-map',
+  devtool: 'cheap-module-source-map',
   devServer: {
     host: '0.0.0.0',
     port: 3000,

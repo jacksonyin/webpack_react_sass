@@ -54,7 +54,7 @@ module.exports = (env, argv) => {
       inline: true,
       hot: true,
     },
-    devtool: isProduction ? undefined : 'eval-cheap-module-source-map',
+    devtool: isProduction ? undefined : 'cheap-module-source-map',
   };
   return config;
 }
