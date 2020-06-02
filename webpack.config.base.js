@@ -8,11 +8,8 @@ const { spawn } = require('child_process');
 const SRC_DIR = path.resolve(__dirname, 'src');
 const OUTPUT_DIR = path.resolve(__dirname, 'dist');
 
-// Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
-const defaultInclude = [SRC_DIR];
-
 const configBase = {
-    entry: SRC_DIR + '/index.jsx',
+    entry: SRC_DIR + '/index.tsx',
     output: {
         path: OUTPUT_DIR,
         publicPath: '/',
@@ -20,33 +17,34 @@ const configBase = {
     },
     module: {
         rules: [
+            { // 除了node_modules文件夹中的文件，所有的tsx文件都用ts-loader处理
+                test: /\.(ts|tsx)$/,
+                exclude: /node_modules/,
+                use: [{ loader: 'ts-loader' }],
+            },
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
                 use: [{ loader: 'babel-loader' }],
-                include: defaultInclude
             },
             {
                 test: /\.(jpe?g|png|gif)$/,
                 exclude: /node_modules/,
                 use: [{ loader: 'file-loader?name=img/[name]__[hash:base64:5].[ext]' }],
-                include: defaultInclude
             },
             {
                 test: /\.(eot|svg|ttf|woff|woff2)$/,
                 exclude: /node_modules/,
                 use: [{ loader: 'file-loader?name=font/[name]__[hash:base64:5].[ext]' }],
-                include: defaultInclude
             },
             {
                 test: /\.html$/,
                 use: [{ loader: "html-loader" }],
-                include: defaultInclude
             }
         ]
     },
     resolve: {
-        extensions: ['.js', '.jsx', '.scss', 'css']
+        extensions: ['ts', '.tsx', '.js', '.jsx', '.scss', 'css']
     },
     plugins: [
         new HtmlWebPackPlugin({

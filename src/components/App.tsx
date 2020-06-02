@@ -1,16 +1,20 @@
-import React, { Component } from "react";
+import * as React from "react";
 
 import './App.scss';
 
-export default class App extends Component {
-  constructor() {
-    super();
+export type IAppProps = {
+
+};
+type IAppState = {
+  value?: string;
+}
+export class App extends React.Component<IAppProps, IAppState> {
+  constructor(props: IAppProps) {
+    super(props);
 
     this.state = {
       value: ""
     };
-
-    // this.handleChange = this.handleChange.bind(this);
   }
 
   handleChange = (event) => {
@@ -25,7 +29,7 @@ export default class App extends Component {
   render() {
     return (
       <>
-      <div className="text-container">Test React</div>
+        <div className="text-container">Test React</div>
         <input
           type="text"
           value={this.state.value}
