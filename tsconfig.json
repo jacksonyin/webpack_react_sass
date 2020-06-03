@@ -3,7 +3,7 @@
     "compilerOptions": {
       "baseUrl": "./",  //解析非相对模块的基准目录
       "paths": {  //路径映射，如在文件中使用‘~/’相当于‘src/’
-        "~/*": ["src/*"]
+        "~/*": ["src/*"],
       },
       "module": "esnext",  //指定生成哪个模块系统的代码
       "target": "es5", //生成es5的js文件

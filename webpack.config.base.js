@@ -44,6 +44,9 @@ const configBase = {
         ]
     },
     resolve: {
+        alias: {
+            '~':  path.resolve(__dirname, './src/'),
+        },
         extensions: ['ts', '.tsx', '.js', '.jsx', '.scss', 'css']
     },
     plugins: [
