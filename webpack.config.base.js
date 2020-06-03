@@ -12,7 +12,7 @@ const configBase = {
     entry: SRC_DIR + '/index.tsx',
     output: {
         path: OUTPUT_DIR,
-        publicPath: '/',
+        publicPath: './',
         filename: 'bundle.js'
     },
     module: {
@@ -131,6 +131,12 @@ const configProdElectron = {
           }),
         new BabiliPlugin(),
     ],
+    stats: {
+      colors: true,
+      children: false,
+      chunks: false,
+      modules: false
+    }
 };
 
 module.exports = {

@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "webpack-dev-server --mode=development --config=./webpack.config.dev.js",
     "dev:e": "webpack-dev-server --config=./webpack.config.dev.electron.js",
-    "build": "webpack --mode=production"
+    "build:e": "webpack --mode=production  --config=./webpack.config.prod.electron.js",
+    "postpackage": "electron-packager ./ --out=./build"
   },
   "devDependencies": {
     "@babel/core": "7.9.6",
