@@ -82,59 +82,7 @@ const configDev = {
         },
     },
 };
-const configDevElectron = {
-    ...configDev,
-    target: 'electron-renderer',
-    devServer: {
-        ...configDev.devServer,
-        setup() {
-            spawn(
-                'electron',
-                ['.'],
-                { shell: true, env: process.env, stdio: 'inherit' }
-            )
-                .on('close', code => process.exit(0))
-                .on('error', spawnError => console.error(spawnError));
-        }
-    },
-};
-const configProdElectron = {
-    ...configBase,
-    target: 'electron-renderer',
-    module: {
-        ...configBase.module,
-        rules: [
-            ...configBase.module.rules,
-
-            {
-                test: /\.(scss|sass|css)$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader',
-                    {
-                        loader: 'sass-loader',
-                        options: {
-                            // Prefer `dart-sass`
-                            implementation: require('sass'),
-                        },
-                    }
-                ],
-            },
-        ]
-    },
-    plugins: [
-        ...configBase.plugins,
-        new MiniCssExtractPlugin({
-            // Options similar to the same options in webpackOptions.output
-            // both options are optional
-            filename: 'bundle.css',
-          }),
-        new BabiliPlugin(),
-    ],
-};
 
 module.exports = {
     configDev,
-    configDevElectron,
-    configProdElectron,
 };
