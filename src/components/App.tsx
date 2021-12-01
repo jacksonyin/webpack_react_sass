@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 import './App.scss';
 
@@ -7,13 +7,13 @@ export type IAppProps = {
 };
 type IAppState = {
   value?: string;
-}
+};
 export class App extends React.Component<IAppProps, IAppState> {
   constructor(props: IAppProps) {
     super(props);
 
     this.state = {
-      value: ""
+      value: '',
     };
   }
 
@@ -21,7 +21,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     const { value } = event.target;
     this.setState(() => {
       return {
-        value
+        value,
       };
     });
   }
