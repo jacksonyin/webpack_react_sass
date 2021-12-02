@@ -71,7 +71,7 @@ const configDev = {
     devtool: 'cheap-module-source-map',
     devServer: {
         host: '0.0.0.0',
-        port: 3000,
+        port: 8088,
         contentBase: OUTPUT_DIR,
         inline: true,
         hot: true,
