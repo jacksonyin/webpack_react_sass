@@ -18,6 +18,19 @@
                 "webpack:///*": "${webRoot}/*"
             },
             "trace": true
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Jest: current file",
+            //"env": { "NODE_ENV": "test" },
+            "program": "${workspaceFolder}/node_modules/.bin/jest",
+            "args": ["${fileBasenameNoExtension}", "--config", "jest.config.js"],
+            "console": "integratedTerminal",
+            "disableOptimisticBPs": true,
+            "windows": {
+              "program": "${workspaceFolder}/node_modules/jest/bin/jest"
+            }
         }
     ]
 }
