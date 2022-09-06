@@ -29,7 +29,7 @@ export class App extends React.Component<IAppProps, IAppState> {
   render() {
     return (
       <>
-        <div className="text-container">Test React</div>
+        <div className="img-container">Test React</div>
         <input
           type="text"
           value={this.state.value}
