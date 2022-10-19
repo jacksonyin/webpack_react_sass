@@ -1,8 +1,5 @@
 const path = require('path');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const BabiliPlugin = require('babili-webpack-plugin');
-const { spawn } = require('child_process');
 
 // Config directories
 const SRC_DIR = path.resolve(__dirname, 'src');
@@ -13,7 +10,11 @@ const configBase = {
     output: {
         path: OUTPUT_DIR,
         publicPath: '/',
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        library: {
+            name: 'exported',
+            type: 'var',
+        },
     },
     module: {
         rules: [
@@ -21,11 +22,6 @@ const configBase = {
                 test: /\.(ts|tsx)$/,
                 exclude: /node_modules/,
                 use: [{ loader: 'ts-loader' }],
-            },
-            {
-                test: /\.(js|jsx)$/,
-                exclude: /node_modules/,
-                use: [{ loader: 'babel-loader' }],
             },
             {
                 test: /\.(jpe?g|png|gif)$/,
@@ -45,7 +41,7 @@ const configBase = {
     },
     resolve: {
         alias: {
-            '~':  path.resolve(__dirname, './src/'),
+            '~': path.resolve(__dirname, './src/'),
         },
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', 'css']
     },
@@ -72,14 +68,7 @@ const configDev = {
     devServer: {
         host: '0.0.0.0',
         port: 8088,
-        contentBase: OUTPUT_DIR,
-        inline: true,
         hot: true,
-        stats: {
-            colors: true,
-            chunks: false,
-            children: false
-        },
     },
 };
 
