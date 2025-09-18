@@ -1,0 +1,97 @@
+.item-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+
+  &--expanded {
+    overflow: visible;
+  }
+}
+
+.item-list {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  .item-container--expanded & {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+}
+
+.sa-item-layout {
+  padding: 4px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.item-item {
+  @extend .sa-item-layout;
+  flex-shrink: 0;
+  background-color: #f0f0f0;
+  color: #333;
+
+  &:hover {
+    background-color: #e0e0e0;
+    border-color: #b0b0b0;
+  }
+
+  // 展开状态下允许换行
+  .item-container--expanded & {
+    flex-shrink: 1;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+.expand-button {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 4px;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+}
+
+.ellipsis {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  color: #666;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .item-container {
+    padding: 0 4px;
+  }
+
+  .item-list {
+    gap: 4px;
+  }
+
+  .item-item {
+    padding: 3px 6px;
+    font-size: 13px;
+  }
+
+  .expand-button {
+    padding: 3px 6px;
+    font-size: 13px;
+  }
+}
+
+// 移除了所有动画效果，保持简洁的交互
