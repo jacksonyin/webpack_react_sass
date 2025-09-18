@@ -9,6 +9,8 @@
     "moduleResolution": "node", //决定如何处理模块
     // "allowJs": true, //允许编译js文件
     "strictNullChecks": false, //在严格的 null检查模式下， null和 undefined值不包含在任何类型里，只允许用它们自己和 any来赋值（有个例外， undefined可以赋值到 void）
+    "resolveJsonModule": true, //允许导入JSON模块
+    "allowSyntheticDefaultImports": true, //允许合成默认导入
     "lib": [
       "esnext",
       // "es2015",
