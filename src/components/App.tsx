@@ -1,6 +1,10 @@
 import * as React from 'react';
 import './App.scss';
-import { ExpandableItemList } from './ExpandableItemList';
+
+import testData from './QueryBuilder/data.json';
+import { QueryBuilder } from './QueryBuilder/QueryBuilder';
+import { PivotSettingHelper } from './QueryBuilder/PivotSettingHelper';
+import { ExpandableItemList } from './ExpandableItemList/ExpandableItemList';
 
 export type IAppProps = Record<string, unknown>;
 
@@ -52,6 +56,8 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   render() {
     const { value, items } = this.state;
+    const props: any = testData;
+    props.pivotSettingHelper = new PivotSettingHelper(props.pivotSettingHelper);
     return (
       <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
         <div className="img-container">Test React</div>
@@ -69,14 +75,12 @@ export class App extends React.Component<IAppProps, IAppState> {
           }}
         />
         
-        <div style={{ margin: '20px 0' }}>
-          <h3>技术栈列表：</h3>
-          <ExpandableItemList items={items} />
+        <div style={{ margin: '20px 0', width: '430px', fontSize: '16px', backgroundColor: 'lightblue' }} className="wyn-smart-analyzer">
+          <QueryBuilder {...props} />
         </div>
         
-        <div style={{ margin: '20px 0' }}>
-          <h3>短列表测试：</h3>
-          <ExpandableItemList items={['React', 'TypeScript', 'Webpack']} />
+        <div style={{ margin: '20px 0', width: '430px', fontSize: '16px', backgroundColor: 'lightblue' }} className="wyn-smart-analyzer">
+          <ExpandableItemList items={items.map(item => ({ text: item }))} />
         </div>
       </div>
     );

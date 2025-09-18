@@ -1,12 +1,34 @@
 import * as React from 'react';
+import { classnames } from '~/utils/utils';
 import './ExpandableItemList.scss';
+
+export type ItemInfo = {
+  text: string;
+  customCSS?: string;
+  title?: string;
+  onClick?: () => void;
+}
 
 /**
  * ExpandableItemList 组件的属性接口
  */
 export type ExpandableItemListProps = {
   /** 要显示的item列表 */
-  items: string[];
+  items: ItemInfo[];
+  /** 自定义展开按钮配置 */
+  expandButton?: {
+    expandText: string;
+    collapseText: string;
+    title?: string;
+    customCSS?: string;
+  };
+  /** 自定义分隔符配置 */
+  separator: {
+    text?: string;
+    customCSS?: string;
+  };
+  /** 自定义item渲染函数 */
+  renderItem?: (item: ItemInfo, index: number, isLastField: boolean, baseCSS: string) => React.ReactNode;
 }
 
 /**
@@ -29,8 +51,22 @@ export type ExpandableItemListState = {
  * - 自动检测容器宽度，超出时显示展开按钮和省略号
  * - 点击展开按钮后items自动换行显示
  * - 响应式设计，支持窗口大小变化
+ * - 支持自定义分隔符（文本和样式类名）
+ * - 支持自定义item渲染函数
+ * - 支持自定义展开按钮（文本、标题、样式类名）
  */
 export class ExpandableItemList extends React.PureComponent<ExpandableItemListProps, ExpandableItemListState> {
+
+  static defaultProps = {
+    separator: {
+      text: ',',
+    },
+    expandButton: {
+      expandText: '展开',
+      collapseText: '收起'
+    }
+  };
+
   // DOM引用
   private containerRef = React.createRef<HTMLDivElement>();
   private contentRef = React.createRef<HTMLDivElement>();
@@ -121,7 +157,7 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
       });
     } else {
       // 需要显示展开按钮，计算可见item数量
-      const visibleCount = this.calculateVisibleItems(containerWidth);
+      const visibleCount = this.calculateVisibleItems(containerWidth, true);
       this.setState({
         showExpandButton: true,
         visibleItemCount: visibleCount
@@ -141,31 +177,29 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
     const tempElement = document.createElement('div');
     tempElement.style.position = 'absolute';
     tempElement.style.visibility = 'hidden';
-    tempElement.style.whiteSpace = 'nowrap';
-    tempElement.style.fontSize = '14px';
-    tempElement.style.padding = '4px 8px';
-    tempElement.style.border = '1px solid #d0d0d0';
-    tempElement.style.borderRadius = '4px';
-    document.body.appendChild(tempElement);
+    this.contentRef.current.appendChild(tempElement);
     
     let totalWidth = 0;
     
     for (let i = 0; i < items.length; i++) {
-      tempElement.textContent = items[i];
+      const item = items[i];
+      tempElement.className = classnames('item-item', item.customCSS);
+      tempElement.textContent = item.text;
       const itemWidth = tempElement.offsetWidth;
       totalWidth += itemWidth + (i > 0 ? gap : 0);
     }
     
-    document.body.removeChild(tempElement);
+    this.contentRef.current.removeChild(tempElement);
     return totalWidth;
   };
 
   /**
    * 计算容器内可以显示的item数量
    * @param containerWidth 容器宽度
+   * @param showExpandButton 是否需要显示展开按钮
    * @returns 可以显示的item数量
    */
-  private calculateVisibleItems = (containerWidth: number): number => {
+  private calculateVisibleItems = (containerWidth: number, showExpandButton: boolean): number => {
     if (!this.contentRef.current) return this.props.items.length;
     
     const items = this.props.items;
@@ -180,19 +214,16 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
     const tempElement = document.createElement('div');
     tempElement.style.position = 'absolute';
     tempElement.style.visibility = 'hidden';
-    tempElement.style.whiteSpace = 'nowrap';
-    tempElement.style.fontSize = '14px';
-    tempElement.style.padding = '4px 8px';
-    tempElement.style.border = '1px solid #d0d0d0';
-    tempElement.style.borderRadius = '4px';
-    document.body.appendChild(tempElement);
+    this.contentRef.current.appendChild(tempElement);
     
     for (let i = 0; i < items.length; i++) {
-      tempElement.textContent = items[i];
+      const item = items[i];
+      tempElement.className = classnames('item-item', item.customCSS);
+      tempElement.textContent = item.text;
       const itemWidth = tempElement.offsetWidth;
       
       const neededWidth = totalWidth + itemWidth + (visibleCount > 0 ? gap : 0);
-      const remainingWidth = containerWidth - (this.state.showExpandButton ? expandButtonWidth + ellipsisWidth : 0);
+      const remainingWidth = containerWidth - (showExpandButton ? expandButtonWidth + ellipsisWidth : 0);
       
       if (neededWidth <= remainingWidth) {
         totalWidth = neededWidth;
@@ -202,7 +233,7 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
       }
     }
     
-    document.body.removeChild(tempElement);
+    this.contentRef.current.removeChild(tempElement);
     return Math.max(0, visibleCount);
   };
 
@@ -231,16 +262,42 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
    * @returns items的React节点数组
    */
   private renderItems = (): React.ReactNode[] => {
-    const { items } = this.props;
+    const { items, renderItem, separator } = this.props;
     const { expanded, visibleItemCount } = this.state;
     
     const itemsToRender = expanded ? items : items.slice(0, visibleItemCount);
     
-    return itemsToRender.map((item, index) => (
-      <div key={index} className="item-item">
-        {item}
-      </div>
-    ));
+    return itemsToRender.map((item, index) => {
+      const isLastField = index === itemsToRender.length - 1;
+
+      return (
+        <React.Fragment key={index}>
+          {index > 0 && (
+            this.renderSeparator()
+          )}
+          {renderItem ? (
+            renderItem(item, index, isLastField, 'item')
+          ) : (
+            <span
+              className={classnames('item-item', item.customCSS)}
+              title={item.title}
+              onClick={item.onClick}
+            >
+              {item.text}
+            </span>
+          )}
+        </React.Fragment>
+      );
+    });
+  };
+
+  private renderSeparator = (): React.ReactNode => {
+    const { separator } = this.props;
+    return (
+      <span className={classnames('separator', separator.customCSS)}>
+        {separator.text}
+      </span>
+    );
   };
 
   /**
@@ -248,16 +305,29 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
    * @returns 省略号的React节点或null
    */
   private renderEllipsis = (): React.ReactNode => {
+    const { separator } = this.props;
     const { expanded, showExpandButton } = this.state;
     
     if (expanded || !showExpandButton) return null;
     
-    return <span className="ellipsis">...</span>;
+    const css = classnames('separator', separator.customCSS);
+    return (
+      <React.Fragment>
+        {this.renderSeparator()}
+        <span className="ellipsis">...</span>
+      </React.Fragment>
+    );
   };
 
   render(): React.ReactNode {
+    const { expandButton } = this.props;
     const { expanded, showExpandButton } = this.state;
-    const containerClassName = `item-container ${expanded ? 'item-container--expanded' : ''}`;
+    const containerClassName = `expandable-items ${expanded ? 'expandable-items--expanded' : ''}`;
+    
+    // 使用自定义的expandButton配置或默认值
+    const buttonText = expanded ? expandButton.collapseText : expandButton.expandText;
+    const buttonTitle = expandButton?.title || buttonText;
+    const buttonClassName = classnames('expand-button', expandButton.customCSS);
     
     return (
       <div ref={this.containerRef} className={containerClassName}>
@@ -265,13 +335,13 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
           {this.renderItems()}
           {this.renderEllipsis()}
           {showExpandButton && (
-            <button 
-              className="expand-button" 
+            <div 
+              className={buttonClassName} 
               onClick={this.handleExpandClick}
-              type="button"
+              title={buttonTitle}
             >
-              {expanded ? '收起' : '展开'}
-            </button>
+              {buttonText}
+            </div>
           )}
         </div>
       </div>
