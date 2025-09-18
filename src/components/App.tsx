@@ -79,7 +79,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           <QueryBuilder {...props} />
         </div>
         
-        <div style={{ margin: '20px 0', width: '430px', fontSize: '16px', backgroundColor: 'lightblue' }} className="wyn-smart-analyzer">
+        <div id="item-list-2" style={{ margin: '20px 0', width: '430px', fontSize: '16px', backgroundColor: 'lightblue' }} className="wyn-smart-analyzer">
           <ExpandableItemList items={items.map(item => ({ text: item }))} />
         </div>
       </div>

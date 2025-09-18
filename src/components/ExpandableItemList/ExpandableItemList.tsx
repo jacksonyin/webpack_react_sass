@@ -15,6 +15,7 @@ export type ItemInfo = {
 export type ExpandableItemListProps = {
   /** 要显示的item列表 */
   items: ItemInfo[];
+  itemGap?: number;
   /** 自定义展开按钮配置 */
   expandButton?: {
     expandText: string;
@@ -41,6 +42,8 @@ export type ExpandableItemListState = {
   showExpandButton: boolean;
   /** 可见的item数量 */
   visibleItemCount: number;
+  /** 展开按钮的宽度 */
+  expandButtonWidth: number;
 }
 
 /**
@@ -58,12 +61,13 @@ export type ExpandableItemListState = {
 export class ExpandableItemList extends React.PureComponent<ExpandableItemListProps, ExpandableItemListState> {
 
   static defaultProps = {
+    itemGap: 4,
     separator: {
       text: ',',
     },
     expandButton: {
-      expandText: '展开',
-      collapseText: '收起'
+      expandText: 'Expand',
+      collapseText: 'Collapse'
     }
   };
 
@@ -80,14 +84,14 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
     this.state = {
       expanded: false,
       showExpandButton: false,
-      visibleItemCount: props.items.length
+      visibleItemCount: props.items.length,
+      expandButtonWidth: 0
     };
   }
 
   componentDidMount(): void {
     this.checkContainerWidth();
     this.setupResizeObserver();
-    window.addEventListener('resize', this.handleResize);
   }
 
   componentDidUpdate(prevProps: ExpandableItemListProps): void {
@@ -103,7 +107,6 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
-    window.removeEventListener('resize', this.handleResize);
   }
 
   /**
@@ -116,18 +119,6 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
       });
       this.resizeObserver.observe(this.containerRef.current);
     }
-  };
-
-  /**
-   * 处理窗口大小变化事件（防抖处理）
-   */
-  private handleResize = (): void => {
-    setTimeout(() => {
-      // 如果已经展开，不需要重新计算宽度
-      if (!this.state.expanded) {
-        this.checkContainerWidth();
-      }
-    }, 100);
   };
 
   /**
@@ -157,36 +148,52 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
       });
     } else {
       // 需要显示展开按钮，计算可见item数量
-      const visibleCount = this.calculateVisibleItems(containerWidth, true);
+      const { visibleCount, expandButtonWidth } = this.calculateVisibleItems(containerWidth, true);
       this.setState({
         showExpandButton: true,
-        visibleItemCount: visibleCount
+        visibleItemCount: visibleCount,
+        expandButtonWidth: expandButtonWidth
       });
     }
   };
 
+  private createTempElement = (): HTMLDivElement => {
+    const tempElement = document.createElement('div');
+    tempElement.style.position = 'absolute';
+    tempElement.style.visibility = 'hidden';
+    this.contentRef.current.appendChild(tempElement);
+    return tempElement;
+  };
+  private getTempElementWidth = (tempElement: HTMLDivElement, text: string, className: string): number => {
+    tempElement.className = classnames(className);
+    tempElement.textContent = text;
+    const width = tempElement.offsetWidth;
+    return width;
+  };
   /**
    * 计算所有items的总宽度
    * @returns 所有items的总宽度（包含间距）
    */
   private calculateAllItemsWidth = (): number => {
     const items = this.props.items;
-    const gap = 8; // item 间距
+    const gap = this.props.itemGap;
     
     // 创建临时元素测量宽度
-    const tempElement = document.createElement('div');
-    tempElement.style.position = 'absolute';
-    tempElement.style.visibility = 'hidden';
-    this.contentRef.current.appendChild(tempElement);
+    const tempElement = this.createTempElement();
+    
+    // 测量分隔符宽度
+    const separatorWidth = this.getTempElementWidth(tempElement, this.props.separator.text, classnames('separator', this.props.separator.customCSS));
     
     let totalWidth = 0;
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      tempElement.className = classnames('item-item', item.customCSS);
-      tempElement.textContent = item.text;
-      const itemWidth = tempElement.offsetWidth;
-      totalWidth += itemWidth + (i > 0 ? gap : 0);
+      const itemWidth = this.getTempElementWidth(tempElement, item.text, classnames('item', item.customCSS));
+
+      // 计算item宽度 + gap + 分隔符宽度
+      const itemGap = i > 0 ? gap : 0;
+      const itemSeparator = i > 0 ? separatorWidth : 0;
+      totalWidth += itemWidth + itemGap + itemSeparator;
     }
     
     this.contentRef.current.removeChild(tempElement);
@@ -197,33 +204,47 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
    * 计算容器内可以显示的item数量
    * @param containerWidth 容器宽度
    * @param showExpandButton 是否需要显示展开按钮
-   * @returns 可以显示的item数量
+   * @returns 包含可见item数量和展开按钮宽度的对象
    */
-  private calculateVisibleItems = (containerWidth: number, showExpandButton: boolean): number => {
-    if (!this.contentRef.current) return this.props.items.length;
+  private calculateVisibleItems = (containerWidth: number, showExpandButton: boolean): { visibleCount: number; expandButtonWidth: number } => {
+    if (!this.contentRef.current) return { visibleCount: this.props.items.length, expandButtonWidth: 0 };
     
     const items = this.props.items;
-    const expandButtonWidth = 60; // 展开按钮预估宽度
-    const ellipsisWidth = 20; // 省略号预估宽度
-    const gap = 8; // item 间距
+    const gap = this.props.itemGap;
     
     let totalWidth = 0;
     let visibleCount = 0;
     
     // 创建临时元素测量宽度
-    const tempElement = document.createElement('div');
-    tempElement.style.position = 'absolute';
-    tempElement.style.visibility = 'hidden';
-    this.contentRef.current.appendChild(tempElement);
+    const tempElement = this.createTempElement();
+
+    // 测量分隔符宽度
+    const separatorWidth = this.getTempElementWidth(tempElement, this.props.separator.text, classnames('separator', this.props.separator.customCSS));
+    
+    // 测量展开按钮和省略号的宽度
+    let expandButtonWidth = 0;
+    let ellipsisWidth = 0;
+    
+    if (showExpandButton) {
+      // 测量展开按钮宽度
+      expandButtonWidth = this.getTempElementWidth(tempElement, this.props.expandButton.expandText, classnames('expand-button', this.props.expandButton?.customCSS));
+      
+      // 测量省略号宽度
+      ellipsisWidth = this.getTempElementWidth(tempElement, '...', classnames('ellipsis', this.props.separator.customCSS));
+    }
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      tempElement.className = classnames('item-item', item.customCSS);
-      tempElement.textContent = item.text;
-      const itemWidth = tempElement.offsetWidth;
+      const itemWidth = this.getTempElementWidth(tempElement, item.text, classnames('item', item.customCSS));
       
-      const neededWidth = totalWidth + itemWidth + (visibleCount > 0 ? gap : 0);
-      const remainingWidth = containerWidth - (showExpandButton ? expandButtonWidth + ellipsisWidth : 0);
+      // 计算当前item需要的总宽度：item宽度 + gap + 分隔符宽度
+      const itemGap = visibleCount > 0 ? gap : 0;
+      const itemSeparator = visibleCount > 0 ? separatorWidth : 0;
+      const neededWidth = totalWidth + itemWidth + itemGap + itemSeparator;
+      
+      // 计算剩余可用宽度：容器宽度 - 展开按钮宽度 - 省略号宽度 - 省略号前分隔符宽度
+      const ellipsisSeparator = showExpandButton ? separatorWidth : 0;
+      const remainingWidth = containerWidth - (showExpandButton ? expandButtonWidth + ellipsisWidth + ellipsisSeparator : 0);
       
       if (neededWidth <= remainingWidth) {
         totalWidth = neededWidth;
@@ -234,7 +255,10 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
     }
     
     this.contentRef.current.removeChild(tempElement);
-    return Math.max(0, visibleCount);
+    return {
+      visibleCount: Math.max(0, visibleCount),
+      expandButtonWidth: expandButtonWidth
+    };
   };
 
   /**
@@ -279,7 +303,7 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
             renderItem(item, index, isLastField, 'item')
           ) : (
             <span
-              className={classnames('item-item', item.customCSS)}
+              className={classnames('item', item.customCSS)}
               title={item.title}
               onClick={item.onClick}
             >
@@ -321,7 +345,7 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
 
   render(): React.ReactNode {
     const { expandButton } = this.props;
-    const { expanded, showExpandButton } = this.state;
+    const { expanded, showExpandButton, expandButtonWidth } = this.state;
     const containerClassName = `expandable-items ${expanded ? 'expandable-items--expanded' : ''}`;
     
     // 使用自定义的expandButton配置或默认值
@@ -329,9 +353,14 @@ export class ExpandableItemList extends React.PureComponent<ExpandableItemListPr
     const buttonTitle = expandButton?.title || buttonText;
     const buttonClassName = classnames('expand-button', expandButton.customCSS);
     
+    // 设置CSS变量用于动态padding
+    const itemListStyle = showExpandButton && !expanded ? {
+      paddingRight: `${expandButtonWidth + 8}px` // 展开按钮宽度 + 8px边距
+    } : {};
+    
     return (
       <div ref={this.containerRef} className={containerClassName}>
-        <div ref={this.contentRef} className="item-list">
+        <div ref={this.contentRef} className="item-list" style={itemListStyle}>
           {this.renderItems()}
           {this.renderEllipsis()}
           {showExpandButton && (
